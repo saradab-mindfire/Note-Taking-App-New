@@ -1,0 +1,39 @@
+schema: spec-driven
+
+context: |
+  Project: Note Taking Monorepo
+
+  Frontend:
+  - React 19
+  - TypeScript
+  - Vite
+  - Zustand
+  - TanStack Query
+  - TipTap
+  - shadcn/ui
+
+  Backend:
+  - Node.js 22
+  - Express 5
+  - TypeScript
+  - Prisma ORM
+  - PostgreSQL 16
+
+  Testing:
+  - Vitest
+  - Supertest
+  - Playwright
+
+  Monorepo:
+  - pnpm workspaces
+
+  Architecture:
+  - Shared types and zod schemas live in packages/shared
+  - Backend and frontend consume shared package
+  - Soft delete via deletedAt timestamp
+  - JWT access + refresh token auth
+
+  Rules:
+  - Follow spec-driven development
+  - Every ticket requires spec → plan → tasks → implement
+  - Never write code before approved spec
