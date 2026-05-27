@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import { authMiddleware } from '../../middleware/auth.middleware.js';
 import { validateBody } from '../../middleware/validate-body.js';
-import { createNoteSchema, updateNoteSchema } from '@notepad/shared';
+import { validateQuery } from '../../middleware/validate-query.js';
+import { createNoteSchema, updateNoteSchema, listNotesQuerySchema } from '@notepad/shared';
+import type { ListNotesQuery } from '@notepad/shared';
 import { NotesService } from './notes.service.js';
 
 const router = Router();
@@ -30,13 +32,15 @@ router.post('/', validateBody(createNoteSchema), async (req, res, next) => {
 
 /**
  * GET /api/notes
- * Lists all non-deleted notes for the authenticated user (without content field).
- * Returns 200 { success: true, data: notes[] }
+ * Lists notes for the authenticated user with pagination, sorting, tag filtering,
+ * and optional inclusion of soft-deleted notes.
+ * Returns 200 { success: true, data: { notes, total, page, limit } }
  */
-router.get('/', async (req, res, next) => {
+router.get('/', validateQuery(listNotesQuerySchema), async (req, res, next) => {
   try {
-    const notes = await notesService.listNotes(req.user!.userId);
-    res.status(200).json({ success: true, data: notes });
+    const query = res.locals['validatedQuery'] as ListNotesQuery;
+    const result = await notesService.listNotes(req.user!.userId, query);
+    res.status(200).json({ success: true, data: result });
   } catch (err) {
     next(err);
   }

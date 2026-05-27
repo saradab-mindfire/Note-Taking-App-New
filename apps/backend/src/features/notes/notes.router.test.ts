@@ -12,6 +12,7 @@ vi.mock('../../lib/prisma.js', () => {
     findUnique: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    count: vi.fn(),
   };
   const noteTag = {
     createMany: vi.fn(),
@@ -21,7 +22,13 @@ vi.mock('../../lib/prisma.js', () => {
     default: {
       note,
       noteTag,
-      $transaction: vi.fn((cb: (tx: unknown) => unknown) => cb({ note, noteTag })),
+      // Handles both callback form (interactive tx) and array form (batch queries)
+      $transaction: vi.fn((cbOrQueries: unknown) => {
+        if (Array.isArray(cbOrQueries)) {
+          return Promise.all(cbOrQueries);
+        }
+        return (cbOrQueries as (tx: unknown) => unknown)({ note, noteTag });
+      }),
     },
   };
 });
@@ -34,6 +41,7 @@ type MockNote = {
   findUnique: ReturnType<typeof vi.fn>;
   create: ReturnType<typeof vi.fn>;
   update: ReturnType<typeof vi.fn>;
+  count: ReturnType<typeof vi.fn>;
 };
 type MockNoteTag = {
   createMany: ReturnType<typeof vi.fn>;
@@ -174,41 +182,139 @@ describe('GET /api/notes/:id', () => {
 // ─── GET /api/notes ───────────────────────────────────────────────────────────
 
 describe('GET /api/notes', () => {
-  it('200 — returns notes list without content field', async () => {
+  it('200 — returns paginated envelope with notes (no content field)', async () => {
     mockNote.findMany.mockResolvedValue([mockNoteRow]);
+    mockNote.count.mockResolvedValue(1);
 
     const res = await request(app).get('/api/notes').set(auth());
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.data).toHaveLength(1);
-    expect(res.body.data[0].content).toBeUndefined();
-    expect(res.body.data[0].title).toBe('Test Note');
-    expect(res.body.data[0].tags).toHaveLength(1);
+    expect(res.body.data.notes).toHaveLength(1);
+    expect(res.body.data.notes[0].content).toBeUndefined();
+    expect(res.body.data.notes[0].title).toBe('Test Note');
+    expect(res.body.data.notes[0].tags).toHaveLength(1);
+    expect(res.body.data.total).toBe(1);
+    expect(res.body.data.page).toBe(1);
+    expect(res.body.data.limit).toBe(20);
   });
 
-  it('200 — returns empty array when no notes', async () => {
+  it('200 — returns empty notes array when no notes', async () => {
     mockNote.findMany.mockResolvedValue([]);
+    mockNote.count.mockResolvedValue(0);
 
     const res = await request(app).get('/api/notes').set(auth());
 
     expect(res.status).toBe(200);
-    expect(res.body.data).toEqual([]);
+    expect(res.body.data.notes).toEqual([]);
+    expect(res.body.data.total).toBe(0);
   });
 
-  it('soft-deleted notes are excluded (Prisma filter)', async () => {
-    // Prisma returns only active notes; we verify the where clause by returning one item
+  it('soft-deleted notes are excluded by default (Prisma filter)', async () => {
     mockNote.findMany.mockResolvedValue([mockNoteNoTags]);
+    mockNote.count.mockResolvedValue(1);
 
     const res = await request(app).get('/api/notes').set(auth());
 
     expect(res.status).toBe(200);
-    expect(res.body.data).toHaveLength(1);
+    expect(res.body.data.notes).toHaveLength(1);
     expect(mockNote.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ deletedAt: null }),
       }),
     );
+  });
+
+  it('200 — pagination params applied (page=2, limit=5)', async () => {
+    mockNote.findMany.mockResolvedValue([]);
+    mockNote.count.mockResolvedValue(12);
+
+    const res = await request(app).get('/api/notes?page=2&limit=5').set(auth());
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.page).toBe(2);
+    expect(res.body.data.limit).toBe(5);
+    expect(res.body.data.total).toBe(12);
+    expect(mockNote.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skip: 5, take: 5 }),
+    );
+  });
+
+  it('400 — invalid page (page=0)', async () => {
+    const res = await request(app).get('/api/notes?page=0').set(auth());
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toBeTruthy();
+  });
+
+  it('400 — limit exceeds max (limit=200)', async () => {
+    const res = await request(app).get('/api/notes?limit=200').set(auth());
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toBeTruthy();
+  });
+
+  it('400 — invalid sortBy value', async () => {
+    const res = await request(app).get('/api/notes?sortBy=unknown').set(auth());
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('400 — invalid sortOrder value', async () => {
+    const res = await request(app).get('/api/notes?sortOrder=random').set(auth());
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('200 — sorts by title ascending when sortBy=title&sortOrder=asc', async () => {
+    mockNote.findMany.mockResolvedValue([]);
+    mockNote.count.mockResolvedValue(0);
+
+    const res = await request(app).get('/api/notes?sortBy=title&sortOrder=asc').set(auth());
+
+    expect(res.status).toBe(200);
+    expect(mockNote.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: { title: 'asc' } }),
+    );
+  });
+
+  it('200 — tag filter applied with AND semantics', async () => {
+    mockNote.findMany.mockResolvedValue([mockNoteRow]);
+    mockNote.count.mockResolvedValue(1);
+
+    const res = await request(app).get(`/api/notes?tags=${TAG_ID}`).set(auth());
+
+    expect(res.status).toBe(200);
+    expect(mockNote.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: [{ tags: { some: { tagId: TAG_ID } } }],
+        }),
+      }),
+    );
+  });
+
+  it('200 — includeDeleted=true omits deletedAt filter', async () => {
+    mockNote.findMany.mockResolvedValue([mockNoteRow]);
+    mockNote.count.mockResolvedValue(2);
+
+    const res = await request(app).get('/api/notes?includeDeleted=true').set(auth());
+
+    expect(res.status).toBe(200);
+    // where should NOT contain deletedAt: null
+    const whereArg = mockNote.findMany.mock.calls[0]?.[0]?.where as Record<string, unknown>;
+    expect(whereArg['deletedAt']).toBeUndefined();
+  });
+
+  it('401 — no auth token', async () => {
+    const res = await request(app).get('/api/notes');
+
+    expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
   });
 });
 
