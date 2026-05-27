@@ -1,5 +1,7 @@
 import express from 'express';
 import authRouter from './features/auth/auth.router.js';
+import notesRouter from './features/notes/notes.router.js';
+import { errorHandler } from './middleware/error-handler.js';
 
 const app = express();
 const PORT = process.env['PORT'] ?? 3000;
@@ -13,6 +15,12 @@ app.get('/health', (_req, res) => {
 
 // Auth routes
 app.use('/api/auth', authRouter);
+
+// Notes routes
+app.use('/api/notes', notesRouter);
+
+// Global error handler — must be registered after all routes
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
