@@ -34,6 +34,7 @@ export type UserResponse = z.infer<typeof userResponseSchema>;
 export type CreateNoteDto = z.infer<typeof createNoteSchema>;
 export type UpdateNoteDto = z.infer<typeof updateNoteSchema>;
 export type NoteResponse = z.infer<typeof noteResponseSchema>;
+export type NoteListItem = Omit<NoteResponse, 'content'>;
 
 // Tag types
 export type CreateTagDto = z.infer<typeof createTagSchema>;
