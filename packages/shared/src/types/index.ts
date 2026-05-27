@@ -19,6 +19,8 @@ import type {
   registerSchema,
   refreshTokenSchema,
   logoutSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
   authResponseSchema,
   tokenPayloadSchema,
 } from '../schemas/auth.js';
@@ -43,6 +45,8 @@ export type LoginDto = z.infer<typeof loginSchema>;
 export type RegisterDto = z.infer<typeof registerSchema>;
 export type RefreshTokenDto = z.infer<typeof refreshTokenSchema>;
 export type LogoutDto = z.infer<typeof logoutSchema>;
+export type ForgotPasswordDto = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordDto = z.infer<typeof resetPasswordSchema>;
 export type AuthResponse = z.infer<typeof authResponseSchema>;
 export type TokenPayload = z.infer<typeof tokenPayloadSchema>;
 

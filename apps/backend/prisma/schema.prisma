@@ -94,3 +94,14 @@ model NoteVersion {
 
   @@map("note_versions")
 }
+
+model PasswordResetOtp {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  code      String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@map("password_reset_otps")
+}
