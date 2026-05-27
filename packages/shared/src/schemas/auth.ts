@@ -37,8 +37,26 @@ export const tokenPayloadSchema = z.object({
   exp: z.number().optional(),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
+export const resetPasswordSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  otp: z
+    .string()
+    .length(6, 'OTP must be exactly 6 digits')
+    .regex(/^\d{6}$/, 'OTP must be a 6-digit number'),
+  newPassword: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password must be at most 128 characters'),
+});
+
 // PascalCase aliases (used in tasks & future imports)
 export const RegisterSchema = registerSchema;
 export const LoginSchema = loginSchema;
 export const RefreshSchema = refreshTokenSchema;
 export const LogoutSchema = logoutSchema;
+export const ForgotPasswordSchema = forgotPasswordSchema;
+export const ResetPasswordSchema = resetPasswordSchema;
