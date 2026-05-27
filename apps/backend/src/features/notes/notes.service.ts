@@ -1,4 +1,4 @@
-import type { CreateNoteDto, UpdateNoteDto, NoteResponse, NoteListItem } from '@notepad/shared';
+import type { CreateNoteDto, UpdateNoteDto, NoteResponse, NoteListItem, ListNotesQuery, NotesListResponse } from '@notepad/shared';
 import prisma from '../../lib/prisma.js';
 import { AppError } from '../../lib/app-error.js';
 
@@ -128,16 +128,44 @@ export class NotesService {
   }
 
   /**
-   * Returns all non-deleted notes for userId, without the content field.
+   * Returns a paginated, sorted, and filtered list of notes for userId.
+   * Supports tag filtering (AND semantics), includeDeleted, sortBy/sortOrder, and page/limit.
    */
-  async listNotes(userId: string): Promise<NoteListItem[]> {
-    const notes = await prisma.note.findMany({
-      where: { userId, deletedAt: null },
-      include: noteWithTagsInclude,
-      orderBy: { updatedAt: 'desc' },
-    });
+  async listNotes(userId: string, query: ListNotesQuery): Promise<NotesListResponse> {
+    const { page, limit, sortBy, sortOrder, tags, includeDeleted } = query;
+    const skip = (page - 1) * limit;
 
-    return notes.map(mapNoteListItem);
+    // Build where clause
+    const where: Record<string, unknown> = { userId };
+    if (!includeDeleted) {
+      where['deletedAt'] = null;
+    }
+    if (tags && tags.length > 0) {
+      where['AND'] = tags.map((tagId) => ({
+        tags: { some: { tagId } },
+      }));
+    }
+
+    // Build orderBy clause
+    const orderBy = { [sortBy]: sortOrder };
+
+    const [notes, total] = await prisma.$transaction([
+      prisma.note.findMany({
+        where,
+        include: noteWithTagsInclude,
+        orderBy,
+        skip,
+        take: limit,
+      }),
+      prisma.note.count({ where }),
+    ]);
+
+    return {
+      notes: notes.map(mapNoteListItem),
+      total,
+      page,
+      limit,
+    };
   }
 
   /**

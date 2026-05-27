@@ -8,6 +8,8 @@ import type {
   createNoteSchema,
   updateNoteSchema,
   noteResponseSchema,
+  listNotesQuerySchema,
+  notesListResponseSchema,
 } from '../schemas/note.js';
 import type {
   createTagSchema,
@@ -35,6 +37,8 @@ export type CreateNoteDto = z.infer<typeof createNoteSchema>;
 export type UpdateNoteDto = z.infer<typeof updateNoteSchema>;
 export type NoteResponse = z.infer<typeof noteResponseSchema>;
 export type NoteListItem = Omit<NoteResponse, 'content'>;
+export type ListNotesQuery = z.infer<typeof listNotesQuerySchema>;
+export type NotesListResponse = z.infer<typeof notesListResponseSchema>;
 
 // Tag types
 export type CreateTagDto = z.infer<typeof createTagSchema>;

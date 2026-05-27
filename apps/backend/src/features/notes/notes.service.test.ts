@@ -10,6 +10,7 @@ vi.mock('../../lib/prisma.js', () => {
     findUnique: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    count: vi.fn(),
   };
   const noteTag = {
     createMany: vi.fn(),
@@ -20,8 +21,13 @@ vi.mock('../../lib/prisma.js', () => {
     default: {
       note,
       noteTag,
-      // $transaction executes the callback with a tx that has the same mocks
-      $transaction: vi.fn((cb: (tx: unknown) => unknown) => cb({ note, noteTag })),
+      // $transaction handles both callback form and array form (interactive vs batch)
+      $transaction: vi.fn((cbOrQueries: unknown) => {
+        if (Array.isArray(cbOrQueries)) {
+          return Promise.all(cbOrQueries);
+        }
+        return (cbOrQueries as (tx: unknown) => unknown)({ note, noteTag });
+      }),
     },
   };
 });
@@ -38,6 +44,7 @@ type MockPrisma = {
     findUnique: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
+    count: ReturnType<typeof vi.fn>;
   };
   noteTag: {
     createMany: ReturnType<typeof vi.fn>;
@@ -164,41 +171,115 @@ describe('NotesService.getNoteById', () => {
 
 // ─── listNotes ────────────────────────────────────────────────────────────────
 
-describe('NotesService.listNotes', () => {
-  it('returns all active notes for user, excluding content', async () => {
-    mock.note.findMany.mockResolvedValue([mockNoteWithTags]);
+const defaultQuery = {
+  page: 1,
+  limit: 20,
+  sortBy: 'createdAt' as const,
+  sortOrder: 'desc' as const,
+  includeDeleted: false,
+};
 
-    const result = await service.listNotes(USER_ID);
+describe('NotesService.listNotes', () => {
+  it('returns paginated envelope with active notes, excluding content', async () => {
+    mock.note.findMany.mockResolvedValue([mockNoteWithTags]);
+    mock.note.count.mockResolvedValue(1);
+
+    const result = await service.listNotes(USER_ID, defaultQuery);
 
     expect(mock.note.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { userId: USER_ID, deletedAt: null },
+        skip: 0,
+        take: 20,
+        orderBy: { createdAt: 'desc' },
       }),
     );
-    expect(result).toHaveLength(1);
-    expect((result[0] as Record<string, unknown>)['content']).toBeUndefined();
-    expect(result[0]!.title).toBe('Test Note');
-    expect(result[0]!.tags).toHaveLength(1);
+    expect(result.notes).toHaveLength(1);
+    expect((result.notes[0] as Record<string, unknown>)['content']).toBeUndefined();
+    expect(result.notes[0]!.title).toBe('Test Note');
+    expect(result.notes[0]!.tags).toHaveLength(1);
+    expect(result.total).toBe(1);
+    expect(result.page).toBe(1);
+    expect(result.limit).toBe(20);
   });
 
-  it('returns empty array when user has no active notes', async () => {
+  it('returns empty notes array with total 0 when user has no active notes', async () => {
     mock.note.findMany.mockResolvedValue([]);
+    mock.note.count.mockResolvedValue(0);
 
-    const result = await service.listNotes(USER_ID);
+    const result = await service.listNotes(USER_ID, defaultQuery);
 
-    expect(result).toEqual([]);
+    expect(result.notes).toEqual([]);
+    expect(result.total).toBe(0);
   });
 
-  it('excludes soft-deleted notes (Prisma filter applied via where clause)', async () => {
-    // Only active notes returned — soft-deleted excluded by the where: { deletedAt: null } filter
+  it('excludes soft-deleted notes by default (deletedAt: null in where clause)', async () => {
     mock.note.findMany.mockResolvedValue([mockNoteNoTags]);
+    mock.note.count.mockResolvedValue(1);
 
-    const result = await service.listNotes(USER_ID);
+    await service.listNotes(USER_ID, defaultQuery);
 
-    expect(result).toHaveLength(1);
-    // Confirm the where clause passes deletedAt: null
     expect(mock.note.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.objectContaining({ deletedAt: null }) }),
+    );
+    expect(mock.note.count).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ deletedAt: null }) }),
+    );
+  });
+
+  it('includes soft-deleted notes when includeDeleted=true', async () => {
+    mock.note.findMany.mockResolvedValue([mockNoteWithTags, { ...mockNoteNoTags, deletedAt: new Date() }]);
+    mock.note.count.mockResolvedValue(2);
+
+    const result = await service.listNotes(USER_ID, { ...defaultQuery, includeDeleted: true });
+
+    // deletedAt: null should NOT be in the where clause
+    expect(mock.note.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: USER_ID } }),
+    );
+    expect(result.total).toBe(2);
+  });
+
+  it('applies tag filtering with AND semantics', async () => {
+    mock.note.findMany.mockResolvedValue([mockNoteWithTags]);
+    mock.note.count.mockResolvedValue(1);
+
+    await service.listNotes(USER_ID, { ...defaultQuery, tags: [TAG_ID, 'tag-2'] });
+
+    expect(mock.note.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: [
+            { tags: { some: { tagId: TAG_ID } } },
+            { tags: { some: { tagId: 'tag-2' } } },
+          ],
+        }),
+      }),
+    );
+  });
+
+  it('applies correct pagination skip/take', async () => {
+    mock.note.findMany.mockResolvedValue([]);
+    mock.note.count.mockResolvedValue(25);
+
+    await service.listNotes(USER_ID, { ...defaultQuery, page: 3, limit: 5 });
+
+    expect(mock.note.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skip: 10, take: 5 }),
+    );
+    const result = await service.listNotes(USER_ID, { ...defaultQuery, page: 3, limit: 5 });
+    expect(result.page).toBe(3);
+    expect(result.limit).toBe(5);
+  });
+
+  it('sorts by title ascending when specified', async () => {
+    mock.note.findMany.mockResolvedValue([]);
+    mock.note.count.mockResolvedValue(0);
+
+    await service.listNotes(USER_ID, { ...defaultQuery, sortBy: 'title', sortOrder: 'asc' });
+
+    expect(mock.note.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: { title: 'asc' } }),
     );
   });
 });
