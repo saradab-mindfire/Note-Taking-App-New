@@ -53,6 +53,25 @@ export const resetPasswordSchema = z.object({
     .max(128, 'Password must be at most 128 characters'),
 });
 
+// Client-only form schemas (not sent to API as-is)
+export const registerFormSchema = registerSchema
+  .extend({
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
+export const resetPasswordFormSchema = resetPasswordSchema
+  .extend({
+    confirmNewPassword: z.string().min(1, 'Please confirm your new password'),
+  })
+  .refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmNewPassword'],
+  });
+
 // PascalCase aliases (used in tasks & future imports)
 export const RegisterSchema = registerSchema;
 export const LoginSchema = loginSchema;
@@ -60,3 +79,5 @@ export const RefreshSchema = refreshTokenSchema;
 export const LogoutSchema = logoutSchema;
 export const ForgotPasswordSchema = forgotPasswordSchema;
 export const ResetPasswordSchema = resetPasswordSchema;
+export const RegisterFormSchema = registerFormSchema;
+export const ResetPasswordFormSchema = resetPasswordFormSchema;
