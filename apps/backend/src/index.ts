@@ -1,6 +1,7 @@
 import express from 'express';
 import authRouter from './features/auth/auth.router.js';
 import notesRouter from './features/notes/notes.router.js';
+import searchRouter from './features/search/search.router.js';
 import tagsRouter from './features/tags/tags.router.js';
 import { errorHandler } from './middleware/error-handler.js';
 
@@ -19,6 +20,9 @@ app.use('/api/auth', authRouter);
 
 // Notes routes
 app.use('/api/notes', notesRouter);
+
+// Search routes
+app.use('/api/search', searchRouter);
 
 // Tags routes
 app.use('/api/tags', tagsRouter);
