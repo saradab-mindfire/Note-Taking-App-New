@@ -24,5 +24,6 @@ module.exports = {
     '*.mjs',
     'playwright-report/',
     'test-results/',
+    '**/src/components/ui/**',
   ],
 };
