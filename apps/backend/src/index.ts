@@ -5,6 +5,7 @@ import searchRouter from './features/search/search.router.js';
 import sharingRouter, { publicSharingRouter } from './features/sharing/sharing.router.js';
 import tagsRouter from './features/tags/tags.router.js';
 import { errorHandler } from './middleware/error-handler.js';
+import { startVersionPurgeJob } from './lib/purge-versions.js';
 
 const app = express();
 const PORT = process.env['PORT'] ?? 3000;
@@ -39,6 +40,7 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  startVersionPurgeJob();
 });
 
 export default app;

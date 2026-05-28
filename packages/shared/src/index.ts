@@ -5,6 +5,7 @@ export * from './schemas/search.js';
 export * from './schemas/sharing.js';
 export * from './schemas/tag.js';
 export * from './schemas/user.js';
+export * from './schemas/version.js';
 
 // Types
 export type * from './types/index.js';

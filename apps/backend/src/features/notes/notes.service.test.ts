@@ -16,17 +16,21 @@ vi.mock('../../lib/prisma.js', () => {
     createMany: vi.fn(),
     deleteMany: vi.fn(),
   };
+  const noteVersion = {
+    create: vi.fn(),
+  };
 
   return {
     default: {
       note,
       noteTag,
+      noteVersion,
       // $transaction handles both callback form and array form (interactive vs batch)
       $transaction: vi.fn((cbOrQueries: unknown) => {
         if (Array.isArray(cbOrQueries)) {
           return Promise.all(cbOrQueries);
         }
-        return (cbOrQueries as (tx: unknown) => unknown)({ note, noteTag });
+        return (cbOrQueries as (tx: unknown) => unknown)({ note, noteTag, noteVersion });
       }),
     },
   };
@@ -49,6 +53,9 @@ type MockPrisma = {
   noteTag: {
     createMany: ReturnType<typeof vi.fn>;
     deleteMany: ReturnType<typeof vi.fn>;
+  };
+  noteVersion: {
+    create: ReturnType<typeof vi.fn>;
   };
   $transaction: ReturnType<typeof vi.fn>;
 };
@@ -342,6 +349,27 @@ describe('NotesService.updateNote', () => {
     await expect(service.updateNote(USER_ID, NOTE_ID, { title: 'x' })).rejects.toThrow(
       new AppError(404, 'Note not found'),
     );
+  });
+
+  it('creates a snapshot with the pre-update title and content', async () => {
+    mock.note.findFirst.mockResolvedValue(mockNoteNoTags);
+    const updated = { ...mockNoteNoTags, title: 'New Title' };
+    mock.note.update.mockResolvedValue(updated);
+    mock.noteVersion.create.mockResolvedValue({});
+
+    await service.updateNote(USER_ID, NOTE_ID, { title: 'New Title' });
+
+    expect(mock.noteVersion.create).toHaveBeenCalledWith({
+      data: { noteId: NOTE_ID, title: 'Test Note', content: 'Hello world' },
+    });
+  });
+
+  it('rolls back update when snapshot insert fails', async () => {
+    mock.note.findFirst.mockResolvedValue(mockNoteNoTags);
+    mock.$transaction.mockRejectedValueOnce(new Error('DB error'));
+
+    await expect(service.updateNote(USER_ID, NOTE_ID, { title: 'New Title' })).rejects.toThrow('DB error');
+    expect(mock.note.update).not.toHaveBeenCalled();
   });
 });
 
