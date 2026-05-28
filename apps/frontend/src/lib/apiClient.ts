@@ -23,6 +23,10 @@ async function refreshAccessToken(): Promise<string | null> {
   return data.data.accessToken;
 }
 
+// Auth endpoints issue their own 401s (wrong credentials, expired OTP, etc.)
+// and must NOT trigger the token-refresh interceptor.
+const PUBLIC_PATHS = ['/api/auth/login', '/api/auth/register', '/api/auth/forgot-password', '/api/auth/reset-password'];
+
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
@@ -43,7 +47,8 @@ export async function apiRequest<T>(
     headers,
   });
 
-  if (response.status !== 401) {
+  // Public auth endpoints: surface the error directly — no refresh interceptor.
+  if (PUBLIC_PATHS.includes(path) || response.status !== 401) {
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({ error: 'Request failed' }));
       throw Object.assign(new Error((errorBody as { error?: string }).error ?? 'Request failed'), {
@@ -54,7 +59,7 @@ export async function apiRequest<T>(
     return response.json() as Promise<T>;
   }
 
-  // 401 — attempt one silent refresh
+  // 401 on an authenticated endpoint — attempt one silent refresh
   if (isRefreshing) {
     // Another request is already refreshing; wait for it then retry
     await new Promise<void>((resolve) => {
