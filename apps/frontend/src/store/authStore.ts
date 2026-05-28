@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useNotesFilterStore } from './notesFilterStore';
 
 interface AuthUser {
   id: string;
@@ -36,5 +37,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     localStorage.removeItem('refresh_token');
     set({ accessToken: null, user: null, isAuthLoading: false });
+    useNotesFilterStore.getState().resetFilters();
   },
 }));
