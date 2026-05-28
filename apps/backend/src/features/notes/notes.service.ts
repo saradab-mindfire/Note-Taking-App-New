@@ -28,6 +28,8 @@ function mapNote(note: PrismaNote): NoteResponse {
       userId: nt.tag.userId,
       name: nt.tag.name,
       color: nt.tag.color,
+      createdAt: nt.tag.createdAt,
+      updatedAt: nt.tag.updatedAt,
     })),
     deletedAt: note.deletedAt,
     createdAt: note.createdAt,
@@ -66,6 +68,8 @@ type PrismaNote = {
       userId: string;
       name: string;
       color: string;
+      createdAt: Date;
+      updatedAt: Date;
     };
   }>;
 };

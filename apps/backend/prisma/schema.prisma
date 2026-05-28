@@ -52,13 +52,16 @@ model Note {
 }
 
 model Tag {
-  id     String    @id @default(cuid())
-  userId String
-  name   String
-  color  String    @default("#6366f1")
-  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  notes  NoteTag[]
+  id        String    @id @default(cuid())
+  userId    String
+  name      String
+  color     String    @default("#6B7280")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes     NoteTag[]
 
+  @@unique([userId, name])
   @@map("tags")
 }
 

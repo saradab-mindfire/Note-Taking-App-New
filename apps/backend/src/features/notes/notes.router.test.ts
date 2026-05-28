@@ -57,7 +57,7 @@ const USER_ID = 'user-1';
 const NOTE_ID = 'note-1';
 const TAG_ID = 'tag-1';
 
-const mockTag = { id: TAG_ID, userId: USER_ID, name: 'Work', color: '#6366f1' };
+const mockTag = { id: TAG_ID, userId: USER_ID, name: 'Work', color: '#6366f1', createdAt: new Date('2026-01-01'), updatedAt: new Date('2026-01-01') };
 
 const mockNoteRow = {
   id: NOTE_ID,
@@ -343,7 +343,7 @@ describe('PATCH /api/notes/:id', () => {
     mockNoteTag.createMany.mockResolvedValue({ count: 1 });
     mockNote.findUnique.mockResolvedValue({
       ...mockNoteNoTags,
-      tags: [{ tag: { id: TAG_B, userId: USER_ID, name: 'Personal', color: '#ff0000' } }],
+      tags: [{ tag: { id: TAG_B, userId: USER_ID, name: 'Personal', color: '#ff0000', createdAt: new Date('2026-01-01'), updatedAt: new Date('2026-01-01') } }],
     });
 
     const res = await request(app)
