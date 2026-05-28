@@ -22,6 +22,11 @@ import type {
   tagResponseSchema,
 } from '../schemas/tag.js';
 import type {
+  createShareLinkSchema,
+  shareLinkResponseSchema,
+  publicNoteResponseSchema,
+} from '../schemas/sharing.js';
+import type {
   loginSchema,
   registerSchema,
   refreshTokenSchema,
@@ -54,6 +59,11 @@ export type SearchResultsResponse = z.infer<typeof searchResultsResponseSchema>;
 export type CreateTagDto = z.infer<typeof createTagSchema>;
 export type UpdateTagDto = z.infer<typeof updateTagSchema>;
 export type TagResponse = z.infer<typeof tagResponseSchema>;
+
+// Sharing types
+export type CreateShareLinkDto = z.infer<typeof createShareLinkSchema>;
+export type ShareLinkResponse = z.infer<typeof shareLinkResponseSchema>;
+export type PublicNoteResponse = z.infer<typeof publicNoteResponseSchema>;
 
 // Auth types
 export type LoginDto = z.infer<typeof loginSchema>;

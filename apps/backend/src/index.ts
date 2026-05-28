@@ -2,6 +2,7 @@ import express from 'express';
 import authRouter from './features/auth/auth.router.js';
 import notesRouter from './features/notes/notes.router.js';
 import searchRouter from './features/search/search.router.js';
+import sharingRouter, { publicSharingRouter } from './features/sharing/sharing.router.js';
 import tagsRouter from './features/tags/tags.router.js';
 import { errorHandler } from './middleware/error-handler.js';
 
@@ -15,6 +16,9 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
+// Public share routes (no auth — registered before auth-protected routes)
+app.use('/public', publicSharingRouter);
+
 // Auth routes
 app.use('/api/auth', authRouter);
 
@@ -23,6 +27,9 @@ app.use('/api/notes', notesRouter);
 
 // Search routes
 app.use('/api/search', searchRouter);
+
+// Sharing routes (auth-protected)
+app.use('/api', sharingRouter);
 
 // Tags routes
 app.use('/api/tags', tagsRouter);
