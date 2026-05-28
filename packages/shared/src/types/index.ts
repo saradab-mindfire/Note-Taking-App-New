@@ -12,6 +12,11 @@ import type {
   notesListResponseSchema,
 } from '../schemas/note.js';
 import type {
+  searchQuerySchema,
+  searchResultItemSchema,
+  searchResultsResponseSchema,
+} from '../schemas/search.js';
+import type {
   createTagSchema,
   updateTagSchema,
   tagResponseSchema,
@@ -39,6 +44,11 @@ export type NoteResponse = z.infer<typeof noteResponseSchema>;
 export type NoteListItem = Omit<NoteResponse, 'content'>;
 export type ListNotesQuery = z.infer<typeof listNotesQuerySchema>;
 export type NotesListResponse = z.infer<typeof notesListResponseSchema>;
+
+// Search types
+export type SearchQuery = z.infer<typeof searchQuerySchema>;
+export type SearchResultItem = z.infer<typeof searchResultItemSchema>;
+export type SearchResultsResponse = z.infer<typeof searchResultsResponseSchema>;
 
 // Tag types
 export type CreateTagDto = z.infer<typeof createTagSchema>;
