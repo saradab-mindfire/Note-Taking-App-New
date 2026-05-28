@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import authRouter from './features/auth/auth.router.js';
 import notesRouter from './features/notes/notes.router.js';
 import searchRouter from './features/search/search.router.js';
@@ -10,6 +11,7 @@ import { startVersionPurgeJob } from './lib/purge-versions.js';
 const app = express();
 const PORT = process.env['PORT'] ?? 3000;
 
+app.use(cors({ origin: process.env['CORS_ORIGIN'] ?? 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 
 // Health check
