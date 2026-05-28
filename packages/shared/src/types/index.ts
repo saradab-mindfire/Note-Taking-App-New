@@ -27,6 +27,11 @@ import type {
   publicNoteResponseSchema,
 } from '../schemas/sharing.js';
 import type {
+  noteVersionSchema,
+  noteVersionListSchema,
+  noteVersionListQuerySchema,
+} from '../schemas/version.js';
+import type {
   loginSchema,
   registerSchema,
   refreshTokenSchema,
@@ -64,6 +69,11 @@ export type TagResponse = z.infer<typeof tagResponseSchema>;
 export type CreateShareLinkDto = z.infer<typeof createShareLinkSchema>;
 export type ShareLinkResponse = z.infer<typeof shareLinkResponseSchema>;
 export type PublicNoteResponse = z.infer<typeof publicNoteResponseSchema>;
+
+// Version types
+export type NoteVersion = z.infer<typeof noteVersionSchema>;
+export type NoteVersionListResponse = z.infer<typeof noteVersionListSchema>;
+export type NoteVersionListQuery = z.infer<typeof noteVersionListQuerySchema>;
 
 // Auth types
 export type LoginDto = z.infer<typeof loginSchema>;

@@ -189,6 +189,11 @@ export class NotesService {
     const { tagIds, ...fields } = dto;
 
     const note = await prisma.$transaction(async (tx) => {
+      // Snapshot the current state before applying changes
+      await tx.noteVersion.create({
+        data: { noteId, title: existing.title, content: existing.content },
+      });
+
       const updated = await tx.note.update({
         where: { id: noteId },
         data: {

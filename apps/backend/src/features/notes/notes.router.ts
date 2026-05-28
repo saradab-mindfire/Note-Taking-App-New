@@ -5,6 +5,7 @@ import { validateQuery } from '../../middleware/validate-query.js';
 import { createNoteSchema, updateNoteSchema, listNotesQuerySchema } from '@notepad/shared';
 import type { ListNotesQuery } from '@notepad/shared';
 import { NotesService } from './notes.service.js';
+import versionsRouter from '../versions/versions.router.js';
 
 const router = Router();
 const notesService = new NotesService();
@@ -112,5 +113,8 @@ router.post('/:id/restore', async (req, res, next) => {
     next(err);
   }
 });
+
+// ─── /:id/versions ────────────────────────────────────────────────────────────
+router.use('/:id/versions', versionsRouter);
 
 export default router;

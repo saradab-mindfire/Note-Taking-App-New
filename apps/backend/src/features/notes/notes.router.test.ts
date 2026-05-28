@@ -18,16 +18,24 @@ vi.mock('../../lib/prisma.js', () => {
     createMany: vi.fn(),
     deleteMany: vi.fn(),
   };
+  const noteVersion = {
+    create: vi.fn(),
+    findMany: vi.fn(),
+    findFirst: vi.fn(),
+    count: vi.fn(),
+    deleteMany: vi.fn(),
+  };
   return {
     default: {
       note,
       noteTag,
+      noteVersion,
       // Handles both callback form (interactive tx) and array form (batch queries)
       $transaction: vi.fn((cbOrQueries: unknown) => {
         if (Array.isArray(cbOrQueries)) {
           return Promise.all(cbOrQueries);
         }
-        return (cbOrQueries as (tx: unknown) => unknown)({ note, noteTag });
+        return (cbOrQueries as (tx: unknown) => unknown)({ note, noteTag, noteVersion });
       }),
     },
   };
