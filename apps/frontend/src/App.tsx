@@ -7,6 +7,7 @@ import { RegisterPage } from '@/pages/RegisterPage';
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
 import { NotesListPage } from '@/pages/NotesListPage';
+import { NoteEditorPage } from '@/pages/NoteEditorPage';
 
 function App() {
   useInitAuth();
@@ -25,6 +26,8 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<Navigate to="/notes" replace />} />
         <Route path="/notes" element={<NotesListPage />} />
+        <Route path="/notes/new" element={<NoteEditorPage />} />
+        <Route path="/notes/:id" element={<NoteEditorPage />} />
       </Route>
 
       {/* Fallback */}

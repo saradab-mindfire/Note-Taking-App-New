@@ -75,6 +75,15 @@ export const updateNoteSchema = z.object({
   tagIds: z.string().array().optional(),
 });
 
+export const noteEditorFormSchema = z.object({
+  title: z
+    .string({ required_error: 'Title is required' })
+    .min(1, 'Title is required')
+    .max(500, 'Title must be at most 500 characters'),
+  content: z.string().default(''),
+  tagIds: z.string().array().optional(),
+});
+
 export const noteResponseSchema = z.object({
   id: z.string(),
   userId: z.string(),
