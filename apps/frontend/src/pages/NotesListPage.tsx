@@ -1,11 +1,14 @@
+import { useNavigate } from 'react-router-dom';
 import { useNotesList } from '@/hooks/useNotesList';
 import { useTagsList } from '@/hooks/useTagsList';
 import { useNotesFilterStore } from '@/store/notesFilterStore';
 import { NotesList } from '@/components/notes/NotesList';
 import { NotesFilterBar } from '@/components/notes/NotesFilterBar';
 import { NotesPagination } from '@/components/notes/NotesPagination';
+import { Button } from '@/components/ui/button';
 
 export function NotesListPage() {
+  const navigate = useNavigate();
   const { page, limit } = useNotesFilterStore();
   const { data, isLoading, isError, refetch } = useNotesList();
   const { data: tags = [], isError: tagsError } = useTagsList();
@@ -16,13 +19,16 @@ export function NotesListPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-4 py-8 space-y-6">
-        <header>
-          <h1 className="text-2xl font-bold tracking-tight">My Notes</h1>
-          {!isLoading && !isError && (
-            <p className="text-sm text-muted-foreground mt-1">
-              {total} {total === 1 ? 'note' : 'notes'}
-            </p>
-          )}
+        <header className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">My Notes</h1>
+            {!isLoading && !isError && (
+              <p className="text-sm text-muted-foreground mt-1">
+                {total} {total === 1 ? 'note' : 'notes'}
+              </p>
+            )}
+          </div>
+          <Button onClick={() => void navigate('/notes/new')}>New Note</Button>
         </header>
 
         <NotesFilterBar tags={tags} tagsError={tagsError} />

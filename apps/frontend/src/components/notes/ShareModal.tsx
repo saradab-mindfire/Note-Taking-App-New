@@ -92,12 +92,25 @@ export function ShareModal({ noteId, open, onOpenChange }: ShareModalProps) {
   const { data: links, isLoading, isError, refetch } = useShareLinks(open ? noteId : undefined);
   const createLink = useCreateShareLink(noteId);
   const [expiresAt, setExpiresAt] = useState('');
+  const [expiresAtError, setExpiresAtError] = useState('');
 
   const activeLinks = links?.filter((l) => l.revokedAt === null) ?? [];
 
   const handleGenerate = () => {
+    setExpiresAtError('');
+
+    let expiresAtIso: string | undefined;
+    if (expiresAt) {
+      const parsed = new Date(expiresAt);
+      if (isNaN(parsed.getTime())) {
+        setExpiresAtError('Please enter a valid date and time.');
+        return;
+      }
+      expiresAtIso = parsed.toISOString();
+    }
+
     createLink.mutate(
-      { expiresAt: expiresAt || undefined },
+      { expiresAt: expiresAtIso },
       { onSuccess: () => setExpiresAt('') },
     );
   };
@@ -127,6 +140,9 @@ export function ShareModal({ noteId, open, onOpenChange }: ShareModalProps) {
               {createLink.isPending ? 'Generating…' : 'Generate link'}
             </Button>
           </div>
+          {expiresAtError && (
+            <p className="text-xs text-destructive">{expiresAtError}</p>
+          )}
           {createLink.isError && (
             <p className="text-xs text-destructive">
               {(createLink.error as Error).message ?? 'Failed to generate link.'}

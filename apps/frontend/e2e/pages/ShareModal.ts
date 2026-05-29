@@ -4,11 +4,13 @@ export class ShareModal {
   constructor(private page: Page) {}
 
   async generateLink(): Promise<string> {
-    await this.page.getByRole('button', { name: /Generate link/i }).click();
-    await this.page.waitForResponse(
-      (res) => res.url().includes('/share') && res.status() === 201,
-      { timeout: 5000 },
-    );
+    await Promise.all([
+      this.page.waitForResponse(
+        (res) => res.url().includes('/api/notes/') && res.url().includes('/share') && res.status() === 201,
+        { timeout: 8000 },
+      ),
+      this.page.getByRole('button', { name: /Generate link/i }).click(),
+    ]);
     const urlSpan = this.page.locator('span.truncate').first();
     return (await urlSpan.textContent()) ?? '';
   }

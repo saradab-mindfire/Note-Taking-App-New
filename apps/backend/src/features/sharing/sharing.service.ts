@@ -3,7 +3,7 @@ import type { CreateShareLinkDto, ShareLinkResponse, PublicNoteResponse, ShareLi
 import prisma from '../../lib/prisma.js';
 import { AppError } from '../../lib/app-error.js';
 
-const BASE_URL = process.env['APP_URL'] ?? 'http://localhost:3000';
+const FRONTEND_URL = process.env['FRONTEND_URL'] ?? 'http://localhost:5173';
 
 export class SharingService {
   async generateShareLink(userId: string, noteId: string, dto: CreateShareLinkDto): Promise<ShareLinkResponse> {
@@ -26,7 +26,7 @@ export class SharingService {
 
     return {
       token,
-      shareUrl: `${BASE_URL}/public/share/${token}`,
+      shareUrl: `${FRONTEND_URL}/share/${token}`,
       expiresAt,
     };
   }
@@ -67,11 +67,9 @@ export class SharingService {
       orderBy: { createdAt: 'desc' },
     });
 
-    const BASE = process.env['APP_URL'] ?? 'http://localhost:3000';
-
     return links.map((link) => ({
       token: link.token,
-      shareUrl: `${BASE}/public/share/${link.token}`,
+      shareUrl: `${FRONTEND_URL}/share/${link.token}`,
       expiresAt: link.expiresAt,
       revokedAt: link.revokedAt,
       viewCount: link.viewCount,
