@@ -8,6 +8,7 @@ import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
 import { NotesListPage } from '@/pages/NotesListPage';
 import { NoteEditorPage } from '@/pages/NoteEditorPage';
+import { SearchPage } from '@/pages/SearchPage';
 
 function App() {
   useInitAuth();
@@ -28,6 +29,7 @@ function App() {
         <Route path="/notes" element={<NotesListPage />} />
         <Route path="/notes/new" element={<NoteEditorPage />} />
         <Route path="/notes/:id" element={<NoteEditorPage />} />
+        <Route path="/search" element={<SearchPage />} />
       </Route>
 
       {/* Fallback */}
