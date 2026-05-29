@@ -18,3 +18,14 @@ export const publicNoteResponseSchema = z.object({
   updatedAt: z.coerce.date(),
   viewCount: z.number().int().nonnegative(),
 });
+
+export const shareLinksListItemSchema = z.object({
+  token: z.string(),
+  shareUrl: z.string(),
+  expiresAt: z.coerce.date().nullable(),
+  revokedAt: z.coerce.date().nullable(),
+  viewCount: z.number().int().nonnegative(),
+  createdAt: z.coerce.date(),
+});
+
+export const shareLinksListResponseSchema = z.array(shareLinksListItemSchema);

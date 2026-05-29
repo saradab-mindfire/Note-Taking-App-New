@@ -1,3 +1,7 @@
+## Purpose
+
+Define the behaviour of the note editor page at `/notes/new` and `/notes/:id`: route access, note loading, rich-text editing, tag selection, autosave, manual save, save status display, first-save navigation, shared form schema, and the Share button that opens the share modal.
+
 ## Requirements
 
 ### Requirement: Authenticated user can access the note editor at /notes/new
@@ -113,7 +117,7 @@ The system SHALL automatically save the note after 1 000 ms of inactivity follow
 ---
 
 ### Requirement: User can manually save the note
-The system SHALL provide a Save button. Clicking it SHALL immediately persist the note regardless of the autosave timer state. The Save button SHALL be disabled while a save is already in-flight.
+The system SHALL provide a Save button and a Share button in the editor toolbar. The Save button SHALL immediately persist the note regardless of the autosave timer state. The Share button SHALL be visible only when editing an existing note (`id` is defined) and SHALL open the share modal on click. The Save button SHALL be disabled while a save is already in-flight.
 
 #### Scenario: Manual save triggers API call
 - **WHEN** the user clicks the Save button and the note is dirty
@@ -126,6 +130,18 @@ The system SHALL provide a Save button. Clicking it SHALL immediately persist th
 #### Scenario: Save button disabled during in-flight save
 - **WHEN** a save mutation is in-flight
 - **THEN** the Save button SHALL be disabled
+
+#### Scenario: Share button visible in edit mode
+- **WHEN** the user is editing an existing note (`/notes/:id`)
+- **THEN** a Share button SHALL be rendered in the toolbar alongside the Save button
+
+#### Scenario: Share button not visible on new note
+- **WHEN** the user is creating a new note (`/notes/new`)
+- **THEN** the Share button SHALL NOT be rendered
+
+#### Scenario: Share button opens share modal
+- **WHEN** the user clicks the Share button
+- **THEN** the share modal SHALL open
 
 ---
 

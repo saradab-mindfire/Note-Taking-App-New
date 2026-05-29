@@ -17,12 +17,16 @@ export function SearchPage() {
   const limitParam = Math.max(1, Math.min(100, Number(searchParams.get('limit') ?? String(DEFAULT_LIMIT))));
 
   const [inputValue, setInputValue] = useState(qParam);
+  const [prevQParam, setPrevQParam] = useState(qParam);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync input with URL on external navigation (browser back/forward)
-  useEffect(() => {
+  // Uses the setState-during-render pattern (React docs recommendation) to
+  // avoid cascading renders from an effect.
+  if (prevQParam !== qParam) {
+    setPrevQParam(qParam);
     setInputValue(qParam);
-  }, [qParam]);
+  }
 
   function handleInputChange(value: string) {
     setInputValue(value);
