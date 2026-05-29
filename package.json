@@ -7,6 +7,7 @@
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "test": "pnpm -r run test",
+    "test:e2e": "pnpm --filter frontend test:e2e",
     "prepare": "husky"
   },
   "pnpm": {
