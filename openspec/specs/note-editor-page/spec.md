@@ -117,7 +117,7 @@ The system SHALL automatically save the note after 1 000 ms of inactivity follow
 ---
 
 ### Requirement: User can manually save the note
-The system SHALL provide a Save button and a Share button in the editor toolbar. The Save button SHALL immediately persist the note regardless of the autosave timer state. The Share button SHALL be visible only when editing an existing note (`id` is defined) and SHALL open the share modal on click. The Save button SHALL be disabled while a save is already in-flight.
+The system SHALL provide a Save button, a Share button, and a **History** button in the editor toolbar. The Save button SHALL immediately persist the note regardless of the autosave timer state. The Share button SHALL be visible only when editing an existing note (`id` is defined) and SHALL open the share modal on click. The **History** button SHALL be visible only when editing an existing note (`id` is defined) and SHALL open the version history drawer on click. The Save button SHALL be disabled while a save is already in-flight.
 
 #### Scenario: Manual save triggers API call
 - **WHEN** the user clicks the Save button and the note is dirty
@@ -142,6 +142,18 @@ The system SHALL provide a Save button and a Share button in the editor toolbar.
 #### Scenario: Share button opens share modal
 - **WHEN** the user clicks the Share button
 - **THEN** the share modal SHALL open
+
+#### Scenario: History button visible in edit mode
+- **WHEN** the user is editing an existing note (`/notes/:id`)
+- **THEN** a History button SHALL be rendered in the toolbar alongside the Save and Share buttons
+
+#### Scenario: History button not visible on new note
+- **WHEN** the user is creating a new note (`/notes/new`)
+- **THEN** the History button SHALL NOT be rendered
+
+#### Scenario: History button opens version history drawer
+- **WHEN** the user clicks the History button
+- **THEN** the version history drawer SHALL open
 
 ---
 
