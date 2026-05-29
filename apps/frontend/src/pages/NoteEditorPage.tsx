@@ -200,7 +200,9 @@ export function NoteEditorPage() {
           restoreError={restoreMutation.isError ? (restoreMutation.error as Error) : null}
           onRestore={(versionId) => {
             restoreMutation.mutate(versionId, {
-              onSuccess: () => setHistoryOpen(false),
+              onSuccess: () => {
+                setHistoryOpen(false);
+              },
             });
           }}
         />

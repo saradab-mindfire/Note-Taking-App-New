@@ -164,13 +164,11 @@ function RestoreConfirmDialog({
   onConfirm,
   onCancel,
   isPending,
-  error,
 }: {
   open: boolean;
   onConfirm: () => void;
   onCancel: () => void;
   isPending: boolean;
-  error: Error | null;
 }) {
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onCancel(); }}>
@@ -182,11 +180,6 @@ function RestoreConfirmDialog({
             A new version snapshot will be created automatically.
           </DialogDescription>
         </DialogHeader>
-        {error && (
-          <p className="text-sm text-destructive">
-            {error.message ?? 'Restore failed. Please try again.'}
-          </p>
-        )}
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={onCancel} disabled={isPending}>
             Cancel
@@ -218,6 +211,7 @@ export function VersionHistoryDrawer({
 
   const handleConfirm = () => {
     if (!selectedVersion) return;
+    setConfirmOpen(false);
     onRestore(selectedVersion.id);
   };
 
@@ -278,7 +272,6 @@ export function VersionHistoryDrawer({
         onConfirm={handleConfirm}
         onCancel={handleCancel}
         isPending={isRestoring}
-        error={restoreError}
       />
     </>
   );
