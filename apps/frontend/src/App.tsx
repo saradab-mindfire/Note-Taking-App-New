@@ -9,6 +9,7 @@ import { ResetPasswordPage } from '@/pages/ResetPasswordPage';
 import { NotesListPage } from '@/pages/NotesListPage';
 import { NoteEditorPage } from '@/pages/NoteEditorPage';
 import { SearchPage } from '@/pages/SearchPage';
+import { PublicSharePage } from '@/pages/PublicSharePage';
 
 function App() {
   useInitAuth();
@@ -31,6 +32,9 @@ function App() {
         <Route path="/notes/:id" element={<NoteEditorPage />} />
         <Route path="/search" element={<SearchPage />} />
       </Route>
+
+      {/* Public pages — no auth required */}
+      <Route path="/share/:token" element={<PublicSharePage />} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/notes" replace />} />

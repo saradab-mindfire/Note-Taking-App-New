@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { test, createNote, createShareLink, deleteNote } from '../fixtures';
+import { test, createNote, createShareLink, deleteNote, API_URL } from '../fixtures';
 import { NoteEditorPage } from '../pages/NoteEditorPage';
-import { ShareModal, fetchPublicShare } from '../pages/ShareModal';
+import { ShareModal } from '../pages/ShareModal';
 
 test.describe('Scenario 5 — Share link generation and public access', () => {
   test('generates a share link and public API returns note content', async ({
@@ -18,12 +18,16 @@ test.describe('Scenario 5 — Share link generation and public access', () => {
     const modal = new ShareModal(page);
     const shareUrl = await modal.generateLink();
 
-    expect(shareUrl).toContain('/public/share/');
+    // shareUrl now points to the frontend viewer (http://localhost:5173/share/:token)
+    expect(shareUrl).toContain('/share/');
 
-    const { status, body } = await fetchPublicShare(request, shareUrl);
-    expect(status).toBe(200);
-    expect((body as { success: boolean }).success).toBe(true);
-    expect((body as { data: { title: string } }).data.title).toBe(note.title);
+    // Extract the token and hit the backend public API directly
+    const token = shareUrl.split('/share/')[1]?.trim();
+    const res = await request.get(`${API_URL}/public/share/${token}`);
+    const body = await res.json() as { success: boolean; data: { title: string } };
+    expect(res.status()).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.data.title).toBe(note.title);
 
     await deleteNote(request, accessToken, note.id);
   });
@@ -35,11 +39,14 @@ test.describe('Scenario 5 — Share link generation and public access', () => {
     const note = await createNote(request, accessToken, { title: `ViewCount Note ${Date.now()}` });
     const link = await createShareLink(request, accessToken, note.id);
 
-    const res1 = await request.get(link.shareUrl);
+    // Use the backend public API URL directly (shareUrl is now a frontend URL)
+    const apiUrl = `${API_URL}/public/share/${link.token}`;
+
+    const res1 = await request.get(apiUrl);
     const body1 = await res1.json() as { data: { viewCount: number } };
     const viewCount1 = body1.data.viewCount;
 
-    const res2 = await request.get(link.shareUrl);
+    const res2 = await request.get(apiUrl);
     const body2 = await res2.json() as { data: { viewCount: number } };
     expect(body2.data.viewCount).toBe(viewCount1 + 1);
 
@@ -54,7 +61,8 @@ test.describe('Scenario 5 — Share link generation and public access', () => {
     const pastDate = new Date(Date.now() - 1000 * 60 * 60).toISOString();
     const link = await createShareLink(request, accessToken, note.id, { expiresAt: pastDate });
 
-    const res = await request.get(link.shareUrl);
+    // Use the backend public API URL directly (shareUrl is now a frontend URL)
+    const res = await request.get(`${API_URL}/public/share/${link.token}`);
     expect(res.status()).toBe(403);
 
     await deleteNote(request, accessToken, note.id);

@@ -4,6 +4,7 @@ import type {
   ShareLinkResponse,
   ShareLinksListResponse,
   CreateShareLinkDto,
+  PublicNoteResponse,
 } from '@notepad/shared';
 
 export async function fetchShareLinks(noteId: string): Promise<ShareLinksListResponse> {
@@ -26,4 +27,10 @@ export async function createShareLink(
 
 export async function revokeShareLink(token: string): Promise<void> {
   await apiRequest<void>(`/api/share/${token}`, { method: 'DELETE' });
+}
+
+export async function fetchPublicNote(token: string): Promise<PublicNoteResponse> {
+  const res = await apiRequest<ApiResponse<PublicNoteResponse>>(`/public/share/${token}`);
+  if (!res.success) throw new Error(res.error);
+  return res.data;
 }

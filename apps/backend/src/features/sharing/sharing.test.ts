@@ -95,7 +95,7 @@ describe('POST /api/notes/:id/share', () => {
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
     expect(res.body.data.token).toHaveLength(64);
-    expect(res.body.data.shareUrl).toContain('/public/share/');
+    expect(res.body.data.shareUrl).toContain('/share/');
     expect(res.body.data.expiresAt).toBeNull();
   });
 
