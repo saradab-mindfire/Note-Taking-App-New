@@ -7,6 +7,7 @@ import type {
 import type {
   createNoteSchema,
   updateNoteSchema,
+  noteEditorFormSchema,
   noteResponseSchema,
   listNotesQuerySchema,
   notesListResponseSchema,
@@ -52,6 +53,7 @@ export type UserResponse = z.infer<typeof userResponseSchema>;
 // Note types
 export type CreateNoteDto = z.infer<typeof createNoteSchema>;
 export type UpdateNoteDto = z.infer<typeof updateNoteSchema>;
+export type NoteEditorFormValues = z.infer<typeof noteEditorFormSchema>;
 export type NoteResponse = z.infer<typeof noteResponseSchema>;
 export type NoteListItem = Omit<NoteResponse, 'content'>;
 export type ListNotesQuery = z.infer<typeof listNotesQuerySchema>;

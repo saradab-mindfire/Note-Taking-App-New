@@ -1,5 +1,5 @@
 import { apiRequest } from '@/lib/apiClient';
-import type { ApiResponse, NotesListResponse } from '@notepad/shared';
+import type { ApiResponse, NotesListResponse, NoteResponse, CreateNoteDto, UpdateNoteDto } from '@notepad/shared';
 
 export interface FetchNotesParams {
   page: number;
@@ -24,6 +24,30 @@ export async function fetchNotes(params: FetchNotesParams): Promise<NotesListRes
   }
 
   const res = await apiRequest<ApiResponse<NotesListResponse>>(`/api/notes?${query}`);
+  if (!res.success) throw new Error(res.error);
+  return res.data;
+}
+
+export async function fetchNote(id: string): Promise<NoteResponse> {
+  const res = await apiRequest<ApiResponse<NoteResponse>>(`/api/notes/${id}`);
+  if (!res.success) throw new Error(res.error);
+  return res.data;
+}
+
+export async function createNote(dto: CreateNoteDto): Promise<NoteResponse> {
+  const res = await apiRequest<ApiResponse<NoteResponse>>('/api/notes', {
+    method: 'POST',
+    body: JSON.stringify(dto),
+  });
+  if (!res.success) throw new Error(res.error);
+  return res.data;
+}
+
+export async function updateNote(id: string, dto: UpdateNoteDto): Promise<NoteResponse> {
+  const res = await apiRequest<ApiResponse<NoteResponse>>(`/api/notes/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(dto),
+  });
   if (!res.success) throw new Error(res.error);
   return res.data;
 }
