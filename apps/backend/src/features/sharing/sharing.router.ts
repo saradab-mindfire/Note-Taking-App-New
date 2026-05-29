@@ -22,6 +22,17 @@ router.post('/notes/:id/share', validateBody(createShareLinkSchema), async (req,
   }
 });
 
+// GET /api/notes/:id/shares
+router.get('/notes/:id/shares', async (req, res, next) => {
+  try {
+    const noteId = req.params['id'] as string;
+    const links = await sharingService.listShareLinks(req.user!.userId, noteId);
+    res.status(200).json({ success: true, data: links });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // DELETE /api/share/:token
 router.delete('/share/:token', async (req, res, next) => {
   try {

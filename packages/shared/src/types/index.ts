@@ -26,6 +26,8 @@ import type {
   createShareLinkSchema,
   shareLinkResponseSchema,
   publicNoteResponseSchema,
+  shareLinksListItemSchema,
+  shareLinksListResponseSchema,
 } from '../schemas/sharing.js';
 import type {
   noteVersionSchema,
@@ -73,6 +75,8 @@ export type TagResponse = z.infer<typeof tagResponseSchema>;
 export type CreateShareLinkDto = z.infer<typeof createShareLinkSchema>;
 export type ShareLinkResponse = z.infer<typeof shareLinkResponseSchema>;
 export type PublicNoteResponse = z.infer<typeof publicNoteResponseSchema>;
+export type ShareLinksListItem = z.infer<typeof shareLinksListItemSchema>;
+export type ShareLinksListResponse = z.infer<typeof shareLinksListResponseSchema>;
 
 // Version types
 export type NoteVersion = z.infer<typeof noteVersionSchema>;

@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useNote } from '@/hooks/useNote';
 import { useTagsList } from '@/hooks/useTagsList';
 import { useNoteEditor } from '@/hooks/useNoteEditor';
 import { RichTextEditor } from '@/components/editor/RichTextEditor';
 import { Button } from '@/components/ui/button';
+import { ShareModal } from '@/components/notes/ShareModal';
 import { useAuthStore } from '@/store/authStore';
 
 export function NoteEditorPage() {
@@ -12,6 +13,7 @@ export function NoteEditorPage() {
   const navigate = useNavigate();
   const { logout } = useAuthStore();
   const isEditMode = Boolean(id);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const {
     data: note,
@@ -112,6 +114,11 @@ export function NoteEditorPage() {
                 {saveStatusLabel[saveStatus]}
               </span>
             )}
+            {isEditMode && (
+              <Button variant="outline" size="sm" onClick={() => setShareOpen(true)}>
+                Share
+              </Button>
+            )}
             <Button onClick={save} disabled={isSaving} size="sm">
               Save
             </Button>
@@ -163,6 +170,10 @@ export function NoteEditorPage() {
         {/* Rich text editor */}
         <RichTextEditor editor={editor} />
       </div>
+
+      {isEditMode && id && (
+        <ShareModal noteId={id} open={shareOpen} onOpenChange={setShareOpen} />
+      )}
     </div>
   );
 }

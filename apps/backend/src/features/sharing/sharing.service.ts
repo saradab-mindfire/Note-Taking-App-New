@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import type { CreateShareLinkDto, ShareLinkResponse, PublicNoteResponse } from '@notepad/shared';
+import type { CreateShareLinkDto, ShareLinkResponse, PublicNoteResponse, ShareLinksListItem } from '@notepad/shared';
 import prisma from '../../lib/prisma.js';
 import { AppError } from '../../lib/app-error.js';
 
@@ -49,6 +49,34 @@ export class SharingService {
       where: { token },
       data: { revokedAt: new Date() },
     });
+  }
+
+  async listShareLinks(userId: string, noteId: string): Promise<ShareLinksListItem[]> {
+    const note = await prisma.note.findFirst({ where: { id: noteId, deletedAt: null } });
+
+    if (!note) {
+      throw new AppError(404, 'Note not found');
+    }
+
+    if (note.userId !== userId) {
+      throw new AppError(403, 'Forbidden');
+    }
+
+    const links = await prisma.sharedLink.findMany({
+      where: { noteId, revokedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const BASE = process.env['APP_URL'] ?? 'http://localhost:3000';
+
+    return links.map((link) => ({
+      token: link.token,
+      shareUrl: `${BASE}/public/share/${link.token}`,
+      expiresAt: link.expiresAt,
+      revokedAt: link.revokedAt,
+      viewCount: link.viewCount,
+      createdAt: link.createdAt,
+    }));
   }
 
   async getPublicNote(token: string): Promise<PublicNoteResponse> {

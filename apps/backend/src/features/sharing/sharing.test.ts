@@ -12,6 +12,7 @@ vi.mock('../../lib/prisma.js', () => {
   const sharedLink = {
     create: vi.fn(),
     findUnique: vi.fn(),
+    findMany: vi.fn(),
     update: vi.fn(),
   };
   return {
@@ -25,6 +26,7 @@ type MockNote = { findFirst: ReturnType<typeof vi.fn> };
 type MockSharedLink = {
   create: ReturnType<typeof vi.fn>;
   findUnique: ReturnType<typeof vi.fn>;
+  findMany: ReturnType<typeof vi.fn>;
   update: ReturnType<typeof vi.fn>;
 };
 
@@ -239,6 +241,57 @@ describe('GET /public/share/:token', () => {
 
     expect(res.status).toBe(404);
     expect(res.body.success).toBe(false);
+  });
+});
+
+// ─── GET /api/notes/:id/shares ────────────────────────────────────────────────
+
+describe('GET /api/notes/:id/shares', () => {
+  it('200 — owner gets list of active links', async () => {
+    mockNote.findFirst.mockResolvedValue(mockNoteRow);
+    mockSharedLink.findMany.mockResolvedValue([mockSharedLinkRow]);
+
+    const res = await request(app).get(`/api/notes/${NOTE_ID}/shares`).set(auth());
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.body.data[0].token).toBe(TOKEN);
+    expect(res.body.data[0].viewCount).toBe(0);
+  });
+
+  it('200 — owner gets empty list when no links exist', async () => {
+    mockNote.findFirst.mockResolvedValue(mockNoteRow);
+    mockSharedLink.findMany.mockResolvedValue([]);
+
+    const res = await request(app).get(`/api/notes/${NOTE_ID}/shares`).set(auth());
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual([]);
+  });
+
+  it('403 — non-owner cannot list links', async () => {
+    mockNote.findFirst.mockResolvedValue({ ...mockNoteRow, userId: OTHER_USER_ID });
+
+    const res = await request(app).get(`/api/notes/${NOTE_ID}/shares`).set(auth());
+
+    expect(res.status).toBe(403);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('404 — note not found', async () => {
+    mockNote.findFirst.mockResolvedValue(null);
+
+    const res = await request(app).get(`/api/notes/no-such/shares`).set(auth());
+
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('401 — no auth', async () => {
+    const res = await request(app).get(`/api/notes/${NOTE_ID}/shares`);
+    expect(res.status).toBe(401);
   });
 });
 
