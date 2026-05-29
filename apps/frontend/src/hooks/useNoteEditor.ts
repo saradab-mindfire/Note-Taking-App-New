@@ -133,7 +133,7 @@ export function useNoteEditor({ noteId, initialNote }: UseNoteEditorOptions) {
     return () => {
       if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     };
-  }, [title, tagIds]);
+  }, [title, tagIds, isDirty, performSave, isEditMode]);
 
   const isSaving = saveStatus === 'saving' || createMutation.isPending || updateMutation.isPending;
 

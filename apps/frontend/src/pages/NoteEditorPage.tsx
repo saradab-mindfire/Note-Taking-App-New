@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useNote } from '@/hooks/useNote';
 import { useTagsList } from '@/hooks/useTagsList';
@@ -37,16 +38,12 @@ export function NoteEditorPage() {
     initialNote: isEditMode ? note : undefined,
   });
 
-  // Handle 401 on note fetch — log out and redirect
-  if (
-    isNoteError &&
-    noteError &&
-    (noteError as Error & { status?: number }).status === 401
-  ) {
-    logout();
-    void navigate('/login', { replace: true });
-    return null;
-  }
+  useEffect(() => {
+    if (isNoteError && noteError && (noteError as Error & { status?: number }).status === 401) {
+      logout();
+      navigate('/login', { replace: true });
+    }
+  }, [isNoteError, noteError, logout, navigate]);
 
   if (isEditMode && isNoteLoading) {
     return (
