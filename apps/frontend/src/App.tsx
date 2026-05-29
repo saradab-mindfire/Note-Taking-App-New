@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { useInitAuth } from '@/hooks/useInitAuth';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthRoute } from '@/components/AuthRoute';
@@ -15,6 +16,8 @@ function App() {
   useInitAuth();
 
   return (
+    <>
+    <Toaster richColors position="top-right" />
     <Routes>
       {/* Auth pages — redirect away if already logged in */}
       <Route element={<AuthRoute />}>
@@ -39,6 +42,7 @@ function App() {
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/notes" replace />} />
     </Routes>
+    </>
   );
 }
 
