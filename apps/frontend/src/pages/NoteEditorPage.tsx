@@ -3,9 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useNote } from '@/hooks/useNote';
 import { useTagsList } from '@/hooks/useTagsList';
 import { useNoteEditor } from '@/hooks/useNoteEditor';
+import { useRestoreVersion } from '@/hooks/useRestoreVersion';
 import { RichTextEditor } from '@/components/editor/RichTextEditor';
 import { Button } from '@/components/ui/button';
 import { ShareModal } from '@/components/notes/ShareModal';
+import { VersionHistoryDrawer } from '@/components/notes/VersionHistoryDrawer';
 import { useAuthStore } from '@/store/authStore';
 
 export function NoteEditorPage() {
@@ -14,6 +16,9 @@ export function NoteEditorPage() {
   const { logout } = useAuthStore();
   const isEditMode = Boolean(id);
   const [shareOpen, setShareOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const restoreMutation = useRestoreVersion(id ?? '');
 
   const {
     data: note,
@@ -119,6 +124,16 @@ export function NoteEditorPage() {
                 Share
               </Button>
             )}
+            {isEditMode && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setHistoryOpen(true)}
+                disabled={isSaving || restoreMutation.isPending}
+              >
+                History
+              </Button>
+            )}
             <Button onClick={save} disabled={isSaving} size="sm">
               Save
             </Button>
@@ -173,6 +188,22 @@ export function NoteEditorPage() {
 
       {isEditMode && id && (
         <ShareModal noteId={id} open={shareOpen} onOpenChange={setShareOpen} />
+      )}
+
+      {isEditMode && id && (
+        <VersionHistoryDrawer
+          noteId={id}
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          isSaving={isSaving}
+          isRestoring={restoreMutation.isPending}
+          restoreError={restoreMutation.isError ? (restoreMutation.error as Error) : null}
+          onRestore={(versionId) => {
+            restoreMutation.mutate(versionId, {
+              onSuccess: () => setHistoryOpen(false),
+            });
+          }}
+        />
       )}
     </div>
   );
